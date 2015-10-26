@@ -1159,7 +1159,7 @@ extern "C" {
                     fields = type_dict[a.ctype].get("jn_args", ((a.ctype, ""),))
                     if "I" in a.out or not a.out or a.ctype in self.classes: # input arg, pass by primitive fields
                         for f in fields:
-                            jn_args.append ( ArgInfo([ f[0], a.name + f[1], "", [], "" ]) )
+                            jn_args.append ( ArgInfo([ f[0] + (a.pointer and "*" or ""), a.name + f[1], "", "/"+a.out, "" ]) )
                             jni_args.append( ArgInfo([ f[0], a.name + f[1].replace(".","_").replace("[","").replace("]",""), "", [], "" ]) )
                     if a.out and a.ctype not in self.classes: # out arg, pass as double[]
                         jn_args.append ( ArgInfo([ "double[]", "%s_out" % a.name, "", [], "" ]) )
@@ -1250,7 +1250,6 @@ extern "C" {
                 if a.out and a.ctype in ('bool', 'int', 'long', 'float', 'double'):
                     jt += '[]'
                 j_args.append( jt + ' ' + a.name )
-
             j_code.write( Template(\
 """    public $static $j_type $j_name($j_args)
     {
@@ -1272,7 +1271,7 @@ extern "C" {
                     j_name=fi.jname, \
                     j_args=", ".join(j_args), \
                     jn_name=fi.jname + '_' + str(suffix_counter), \
-                    jn_args_call=", ".join( [a.name for a in jn_args] ),\
+                    jn_args_call=", ".join( [(a.name + (("I" in a.out and a.pointer and a.ctype not in self.classes) and "[0]" or "")) for a in jn_args] ),\
                 )
             )
 
